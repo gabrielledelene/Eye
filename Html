@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Title of the document</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/webgl-utils/0.0.9/webgl-utils.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/loglevel/1.4.1/loglevel.min.js"></script>
+<script id="vertex-shader" type="x-shader/x-vertex">
+attribute vec4 aPosition;
+attribute vec4 aColor;
+varying vec4 vcolor;
+uniform mat4 uModelViewMatrix;
+uniform mat4 uProjectionMatrix;
+void main()
+{
+vcolor = aColor;
+gl_Position = uProjectionMatrix * uModelViewMatrix * aPosition;
+}
+</script>
+<script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+varying vec4 vcolor;
+void main()
+{
+gl_FragColor = vcolor;
+}
+</script>
+</head>
+
+<body style="background-color:powderblue;">
+<canvas id="gl-canvas" width="512" height="512"></canvas>
+<div>
+theta
+<input id="thetaSlider" type="range"
+min="0" max="2*pi" step="0.1" value ="0" />
+6.28
+</div>
+<div>
+phi
+<input id="phiSlider" type="range"
+min="0" max="2*pi" step="0.1" value ="0" />
+6.28
+</div>
+<div>
+radius
+<input id="radiusSlider" type="range"
+min=".5" max="5" step="0.1" value ="2" />
+5
+</div>
+<div>
+depth .05
+<input id="depthSlider" type="range"
+min=".05" max="3" step="0.1" value ="2" />
+3
+</div>
+<div>
+left -2
+<input id="leftSlider" type="range"
+min="-5" max="5" step="0.1" value ="-2" />
+2
+</div>
+<div>
+right 2
+<input id="rightSlider" type="range"
+min="-5" max="5" step="0.1" value ="2" />
+-2
+</div>
+<div>
+ytop 2
+<input id="ytopSlider" type="range"
+min="-5" max="5" step="0.1" value ="2" />
+-2
+</div>
+<div>
+bottom -2
+<input id="bottomSlider" type="range"
+min="-5" max="5" step="0.1" value ="-2" />
+2
+</div>
+<script type="text/javascript">
+"use strict";
+var canvas;
+var gl;
+var program;
+var points = [];
+var colors = [];
+var theta = 0.0;
+var phi = 0.0;
+var radius = 2.0;
+var depth = 2;
+var left = -2;
+var right = 2;
+var ytop = 2;
+var bottom = -2;
+var near = -depth/2;
+var far = depth/2;
+var modelViewMatrix, projectionMatrix;
+var modelViewMatrixLoc, projectionMatrixLoc;
+var eye;
+var numPositions = 36;
+var numVertices = numPositions * 3;
+var index = 0;
+var xAxis = 0;
+var yAxis = 1;
+var zAxis = 2;
+var axis = 0;
+var thetaLoc;
+var colorLoc;
+
+window.onload = function init() {
+canvas = document.getElementById("gl-canvas");
+gl = WebGLUtils.setupWebGL(canvas);
+if (!gl) { alert("WebGL isn't available"); }
+colorCube();
+program = initShaders(gl, "vertex-shader", "fragment-shader");
+gl.useProgram(program);
+modelViewMatrixLoc = gl.getUniformLocation(program, "uModelViewMatrix");
+projectionMatrixLoc = gl.getUniformLocation(program, "uProjectionMatrix");
+thetaLoc = gl.getUniformLocation(program, "theta");
+colorLoc = gl.getUniformLocation(program, "color");
+
+var cBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW);
+var vColor = gl.getAttribLocation(program, "aColor");
+gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
+gl.enableVertexAttribArray(vColor);
+
+var vBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW);
+var vPosition = gl.getAtt
